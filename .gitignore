@@ -1,0 +1,11 @@
+.DS_Store
+/toolbox/spm12/
+/model/simulation/out
+/model/recovery
+/processed/pilot07
+/test_environment/
+/toolbox/fit_functions/bads-master
+/toolbox/fit_functions/vbmc-master
+/old
+/import
+/code_review

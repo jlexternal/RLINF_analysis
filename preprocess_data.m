@@ -4,7 +4,7 @@
 % py2.7> 'import matlab.engine'
 % py2.7> 'eng = matlab.engine.start_matlab()'
 clear all
-samplename = 'sample1'; % Pilot - 'pilot'
+samplename = 'sample2'; % Pilot - 'pilot'
 
 load(sprintf('./constants/constants_rlinf_%s.mat',samplename)); % load nblk, ncond, ntrl, samplename
 load(sprintf('./processed/%s/subj_struct_%s.mat',samplename,samplename)); % load the raw data structure for data sample

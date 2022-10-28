@@ -2,7 +2,7 @@
 clear all
 
 addpath ./toolbox/plot_functions/
-samplename = 'sample1'; % Pilot - 'pilot'
+samplename = 'sample2'; % Pilot - 'pilot'
 
 load(sprintf('./constants/constants_rlinf_%s.mat',samplename)); % load nblk, ncond, ntrl, samplename
 load(sprintf('./processed/%s/preprocessed_data_%s.mat',samplename,samplename)); % load the raw data structure for data sample
@@ -307,8 +307,10 @@ ndat = sum(any(~isnan(porange(:,:,1)),2));
 rgbs = [93 74 25; 25 42 68]/100;
 figure
 clf
+hold on
 shadedErrorBar(1:xlen,nanmean(prepeat,1),nanstd(prepeat,[],1)/sqrt(ndat),'lineprops',{'Color',rgbs(1,:),'LineWidth',2});
 shadedErrorBar(1:xlen,nanmean(porange,1),nanstd(porange,[],1)/sqrt(ndat),'lineprops',{'Color',rgbs(2,:),'LineWidth',2});
+plot([1 xlen],[0 1],'--');
 title(sprintf('p(repeat) - Bandit\np(repeat, ev. signed by prev choice) - Inference\n%s (N = %d)',samplename,nsubj-nexcl),'FontSize',14);
 xticklabels((bin_edge_right(2:end)+bin_edge_right(1:end-1))/2);
 xlabel('bins (signed feedback)');

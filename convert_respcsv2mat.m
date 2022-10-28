@@ -7,7 +7,7 @@
 clear all
 clc
 
-samplename = 'sample1';
+samplename = 'sample2';
 versionadd = '';
 dirname = './import';
 filename = sprintf('resp_%s%s.csv',samplename,versionadd);
@@ -32,7 +32,7 @@ for isubj = 1:nsubj
     
     % if number of trials are mismatched
     if sum(idx) ~= ntrl_max
-        fprintf('Subject %d reported %d/588 trials!\n',isubj,sum(idx));
+        fprintf('Subject %d reported %d/%d trials!\n',isubj,sum(idx),ntrl_max);
         if sum(idx) == 0 % returned subjects
             isubj_task_excl = [isubj_task_excl isubj];
             continue
@@ -67,6 +67,7 @@ for isubj = 1:nsubj
             t_missing = setdiff(1:288,fulltable.itrl(idx & fulltable.icnd == 1));
             if ~isempty(t_missing)
                 fprintf(' > %d fairy trials missing\n',numel(t_missing));
+                isubj_task_excl = [isubj_task_excl isubj];
             else
                 fprintf(' > all fairy trials accounted for. Requires manual filtering.\n');
                 isubj_task_extra = [isubj_task_extra isubj];
@@ -75,6 +76,7 @@ for isubj = 1:nsubj
             t_missing = setdiff(1:288,fulltable.itrl(idx & fulltable.icnd == 0));
             if ~isempty(t_missing)
                 fprintf(' > %d bandit trials missing\n',numel(t_missing));
+                isubj_task_excl = [isubj_task_excl isubj];
             else
                 fprintf(' > all bandit trials accounted for. Requires manual filtering.\n');
                 isubj_task_extra = [isubj_task_extra isubj];

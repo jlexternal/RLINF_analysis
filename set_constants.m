@@ -1,6 +1,6 @@
 % set_constants
-
-samplename = 'sample1';
+clear all
+samplename = 'sample2';
 ncnd = 2;
 nblk = 4;
 ntrl = 73;

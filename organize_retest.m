@@ -1,7 +1,7 @@
 % organize_retest
 clear all
 
-samplename = 'sample1';
+samplename = 'sample2';
 versionadd = '';
 dirname = './import';
 filename = sprintf('pid_%s%s.csv',samplename,versionadd);
@@ -22,5 +22,3 @@ p_threshold = 158/288; % 158 out of 288 for binomial test against random
 idx_aboveChance = any(pcorr >= p_threshold,2);
 
 idx_retest = idx_task & idx_ques & idx_aboveChance;
-
-fulltable.pid{idx_retest}

@@ -8,9 +8,9 @@ clc
 addpath ./toolbox/ques_functions/ % for parseqn.m
 
 % --------------------INPUTS ------------------------------
-samplename  = 'sample1';
+samplename  = 'sample2';
 versionadd  = '';
-nsubj       = 200; % can be arbitrary but set to constant later
+nsubj       = 247; % can be arbitrary but set to constant later
 dirname     = './import';
 filename    = sprintf('ques_%s%s.csv',samplename,versionadd);
 is_short_ques = true; % toggle for shortened questionnaire
@@ -137,6 +137,12 @@ if ~is_short_ques
         resp_str = ques_table(idx,3:nresp+2);
         [~,resp_str] = strtok(resp_str,':"');
         for iresp = 1:nresp
+            if str2double(resp_str{iresp}(3)) == 0
+                fprintf('Subject %d has missing questionnaire (''%s'')\n',isubj,label);
+                isubj_incompl = [isubj_incompl isubj];
+                continue_flag = true;
+            break
+        end
             ques_struct{isubj}.alcohol.raw = [ques_struct{isubj}.alcohol.raw str2double(resp_str{iresp}(3))];
         end
         
@@ -200,6 +206,12 @@ for idx = idx_test
     resp_str = ques_table(idx,3:nresp+2);
     [~,resp_str] = strtok(resp_str,':"');
     for iresp = 1:nresp
+        if str2double(resp_str{iresp}(3)) == 0
+            fprintf('Subject %d has missing questionnaire (''%s'')\n',isubj,label);
+            isubj_incompl = [isubj_incompl isubj];
+            continue_flag = true;
+            break
+        end
         if ~is_short_ques
             ques_struct{isubj}.anxiety.raw(iresp) = str2double(resp_str{iresp}(3));
         else
@@ -260,7 +272,14 @@ for idx = idx_test
     
     resp_str = ques_table(idx,3:nresp+2);
     [~,resp_str] = strtok(resp_str,':"');
+    
     for iresp = 1:nresp
+        if str2double(resp_str{iresp}(3)) == 0
+            fprintf('Subject %d has missing questionnaire (''%s'')\n',isubj,label);
+            isubj_incompl = [isubj_incompl isubj];
+            continue_flag = true;
+            break
+        end
         if ~is_short_ques
             ques_struct{isubj}.apathy.raw(iresp) = str2double(resp_str{iresp}(3));
         else
@@ -325,6 +344,12 @@ for idx = idx_test
     resp_str = ques_table(idx,3:nresp+2);
     [~,resp_str] = strtok(resp_str,':"');
     for iresp = 1:nresp
+        if str2double(resp_str{iresp}(3)) == 0
+            fprintf('Subject %d has missing questionnaire (''%s'')\n',isubj,label);
+            isubj_incompl = [isubj_incompl isubj];
+            continue_flag = true;
+            break
+        end
         if ~is_short_ques
             ques_struct{isubj}.bis.raw(iresp) = str2double(resp_str{iresp}(3));
         else
@@ -414,6 +439,12 @@ for idx = idx_test
     resp_str = ques_table(idx,3:nresp+2);
     [~,resp_str] = strtok(resp_str,':"');
     for iresp = 1:nresp
+        if str2double(resp_str{iresp}(3)) == 0
+            fprintf('Subject %d has missing questionnaire (''%s'')\n',isubj,label);
+            isubj_incompl = [isubj_incompl isubj];
+            continue_flag = true;
+            break
+        end
         if ~is_short_ques
             ques_struct{isubj}.depress.raw(iresp) = str2double(resp_str{iresp}(3));
         else
@@ -475,6 +506,12 @@ for idx = idx_test
     resp_str = ques_table(idx,3:nresp+2);
     [~,resp_str] = strtok(resp_str,':"');
     for iresp = 1:nresp
+        if str2double(resp_str{iresp}(3)) == 0
+            fprintf('Subject %d has missing questionnaire (''%s'')\n',isubj,label);
+            isubj_incompl = [isubj_incompl isubj];
+            continue_flag = true;
+            break
+        end
         if ~is_short_ques
             ques_struct{isubj}.eat.raw(iresp) = str2double(resp_str{iresp}(3));
         else

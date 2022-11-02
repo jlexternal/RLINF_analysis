@@ -89,7 +89,7 @@ scatter(x(idx),y(idx));
 xlim([0 .6]);
 ylim([0 .6]);
 xlabel('Bandit');
-ylabel('Apples');
+ylabel('Fairy');
 [r,p] = corr(x(idx),y(idx));
 fprintf('Correlation p(switch): r = %.4f, p = %.4f\n',r,p);
 

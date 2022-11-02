@@ -3,7 +3,7 @@ clear all
 
 % INPUT ------------------
 modeltype = 'noisyKF_cfrule';
-samplename = 'sample1';
+samplename = 'sample2';
 load(sprintf('./sample_in/%s/out_fit_%s_ALL.mat',samplename,modeltype));
 addpath(genpath('../../toolbox/fit_functions/vbmc-master'))
 npar = 4; % some are 3 some are 4, specify explicitly here
@@ -44,7 +44,7 @@ end
 
 %% plot parameter correlations
 x = [pars(idx,:,1) pars(idx,:,2)];
-[r,p] = corr(x);
+[r,p] = corr(x,'Type','Spearman');
 dat.R = r;
 dat.P = p;
 if strcmpi(modeltype,'noisyKF')
@@ -58,7 +58,7 @@ plotCorrMatrix(dat);
 
 %% examine posterior distribution of parameters for each subject/condition
 isubj = 3;
-icond = 2;
+icond = 1;
 for isubj = 1:nsubj 
     if isempty(out_vbmc{isubj,1})
         continue

@@ -100,45 +100,51 @@ end
 % Filter extra trials if necessary
 condstr = {'bandit','fairy'};
 for isubj = unique(isubj_task_extra)
-    dat = subj_struct{isubj};
-    nt_subj = size(dat,1);
-    fprintf('Analyzing data of subject %d...\n',isubj);
-    % check which condition has extra trials
-    for icond = 0:1
-        nt = sum(dat.icnd == icond);
-        if nt > ntrl_max/2
-            fprintf('Extra trials (%d/%d) found in the %s (cond %d) condition!\n',nt,ntrl_max/2,condstr{icond+1},icond);
-            cond2fix = icond;
-        end
-    end
-    
-    % check if the extra trials are due to repeated timestamp logs
-    if sum(dat.ts(2:end) == dat.ts(1:end-1)) == (nt_subj-ntrl_max)
-        fprintf(['Extra trials are strictly due to repeated timestamped entries!\n' ...
-            'Running automated deletion of repeated entries...\n']);
-        it2delete = [];
-        for it = 2:nt_subj
-            if dat.icnd(it) ~= cond2fix
-                continue
+    isFixableDuplicate = true;
+    while isFixableDuplicate
+        dat = subj_struct{isubj};
+        nt_subj = size(dat,1);
+        fprintf('Analyzing data of subject %d...\n',isubj);
+        % check which condition has extra trials
+        for icond = 0:1
+            nt = sum(dat.icnd == icond);
+            if nt > ntrl_max/2
+                fprintf('Extra trials (%d/%d) found in the %s (cond %d) condition!\n',nt,ntrl_max/2,condstr{icond+1},icond);
+                cond2fix = icond;
             end
-            % find duplicate timestamp trials (2nd occurence)
-            if dat.ts(it) == dat.ts(it-1)
-                it2delete = [it2delete it];
-            end
-        end
-        % delete these entries
-        dat(it2delete,:) = [];
-        if size(dat,1) == ntrl_max
-            fprintf('Subject %d data has been fully corrected, replacing entry in subj_struct...\n',isubj);
-            subj_struct{isubj} = dat;
         end
         
-    else
-        warning('Subject %d has extra entries that are not due to timestamp duplicates! Check manually.',isubj);
+        % check if the extra trials are due to repeated timestamp logs
+        if sum(dat.ts(2:end) == dat.ts(1:end-1)) == (nt_subj-ntrl_max)
+            fprintf(['Extra trials are strictly due to repeated timestamped entries!\n' ...
+                'Running automated deletion of repeated entries...\n']);
+            it2delete = [];
+            for it = 2:nt_subj
+                if dat.icnd(it) ~= cond2fix
+                    continue
+                end
+                % find duplicate timestamp trials (2nd occurence)
+                if dat.ts(it) == dat.ts(it-1)
+                    it2delete = [it2delete it];
+                end
+            end
+            % delete these entries
+            dat(it2delete,:) = [];
+            subj_struct{isubj} = dat;
+            if size(dat,1) == ntrl_max
+                fprintf('Subject %d data has been fully corrected, replacing entry in subj_struct...\n',isubj);
+                isFixableDuplicate = false;
+            end
+        else
+            warning('Subject %d has extra entries that are not due to timestamp duplicates! Check manually.',isubj);
+            isFixableDuplicate = false;
+        end
     end
-    fprintf('Corrections to subject data complete.\n\n');
+    fprintf('Corrections to subject %d data complete.\n\n',isubj);
 end
 
+isubj_task_excl = unique(isubj_task_excl);
+fprintf('%d full data points collected.\n\n',nsubj-numel(isubj_task_excl));
 
 % Save to file
 savename = sprintf('subj_struct_%s', samplename);

@@ -2,12 +2,12 @@
 clear all
 
 % INPUT ---------------------------------
-samplename   = 'sample1';
+samplename   = 'sample2';
 fittype      = 'fit'; % 'fit' or 'recovery'
 outputkernel = 'out_fit_noisyKF_s'; % name kernel of output
 momenttype   = 'xavg'; % xavg or xmap
-npar = 3; % this might change depending on the type of model used
-nsubj = 113;
+npar         = 3; % this might change depending on the type of model used
+nsubj = 110;
 % --------------------------------------
 
 load(sprintf('../../constants/constants_rlinf_%s.mat',samplename),'ncnd'); % load constants
@@ -22,11 +22,12 @@ for isubj = 1:nsubj
         continue
     end
     
-    load(sprintf('./sample_in/%s/%s%03d.mat',samplename,outputkernel,isubj));
+    fits = load(sprintf('./sample_in/%s/%s%03d.mat',samplename,outputkernel,isubj));
 
     switch fittype
         case 'fit'
-            out_vbmc(isubj,:) = out_fit.out_vbmc(isubj,:);
+%             out_vbmc(isubj,:) = out_fit.out_vbmc(isubj,:);
+            out_vbmc(isubj,:) = fits.out_fit.out_vbmc(isubj,:);
         case 'recovery'
             out_vbmc(isubj,:) = out_rec.out_vbmc(isubj,:);
     end
@@ -48,7 +49,7 @@ out.outputkernel = outputkernel;
 out.momenttype = momenttype;
 
 % Write a description of the data file produced here
-out.description = 'Recovered parameters on sample1 (subj_max 113) with noisyKF model'; 
+out.description = 'Recovered parameters on sample2 (subj_max 110) with noisyKF model'; 
 
 savename = 'pars_fit_noisyKF_ALL.mat';
 save(sprintf('./sample_out/%s/%s',samplename,savename),'out');

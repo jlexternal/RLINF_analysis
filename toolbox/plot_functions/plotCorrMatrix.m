@@ -22,7 +22,7 @@ if ~isfield(dat,'R')
 end
 R = dat.R;
 if any(isnan(R))
-    error('Warning: NaNs found in input dataset. Proceeding...')
+    error('Error: NaNs found in input!')
 end
 if isfield(dat,'P')
     P = dat.P';

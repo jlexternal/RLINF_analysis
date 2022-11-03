@@ -4,10 +4,11 @@ clear all
 % INPUT ---------------------------------
 samplename   = 'sample2';
 fittype      = 'fit'; % 'fit' or 'recovery'
-outputkernel = 'out_fit_noisyKF_s'; % name kernel of output
+outputkernel = 'out_fit_noisyKF_cfrule_s'; % name kernel of output
+savekernel   = 'fit_noisyKF_cfrule'; % output kernel without 'out' and 's'
 momenttype   = 'xavg'; % xavg or xmap
-npar         = 3; % this might change depending on the type of model used
-nsubj = 110;
+npar         = 4; % this might change depending on the type of model used
+nsubj = 247;
 % --------------------------------------
 
 load(sprintf('../../constants/constants_rlinf_%s.mat',samplename),'ncnd'); % load constants
@@ -26,8 +27,8 @@ for isubj = 1:nsubj
 
     switch fittype
         case 'fit'
-%             out_vbmc(isubj,:) = out_fit.out_vbmc(isubj,:);
-            out_vbmc(isubj,:) = fits.out_fit.out_vbmc(isubj,:);
+            out_vbmc(isubj,:) = fits.out_vbmc(isubj,:);
+%             out_vbmc(isubj,:) = fits.out_fit.out_vbmc(isubj,:);
         case 'recovery'
             out_vbmc(isubj,:) = out_rec.out_vbmc(isubj,:);
     end
@@ -41,6 +42,7 @@ end
 % individual fits
 save(sprintf('./sample_in/%s/%s_ALL.mat',samplename,outputkernel(1:end-2)),'out_vbmc');
 
+% Save the parameters by themselves here
 % information about the data generated
 out = struct;
 out.samplename = samplename;
@@ -51,7 +53,7 @@ out.momenttype = momenttype;
 % Write a description of the data file produced here
 out.description = 'Recovered parameters on sample2 (subj_max 110) with noisyKF model'; 
 
-savename = 'pars_fit_noisyKF_ALL.mat';
+savename = sprintf('pars_%s_ALL.mat',savekernel);
 save(sprintf('./sample_out/%s/%s',samplename,savename),'out');
 
 

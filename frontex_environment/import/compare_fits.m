@@ -6,7 +6,7 @@ samplename  = 'sample2';
 kernelarr   = {'out_fit_noisyKF_ALL',...
                'out_fit_noisyKF_cfrule_ALL'};
 momenttype   = 'xavg'; % xavg or xmap
-nsubj = 110; % to be replaced from input from constants LATER
+nsubj = 247; % to be replaced from input from constants LATER
 % -------------------------------
 
 condstr = {'bandit','fairy'};
@@ -39,8 +39,6 @@ for imod = 1:nmod
     end
 end
 
-%% Compare parameter values between models
-
 %% Fixed effects BMS
 
 model_rank = nan(nsubj,nmod,ncnd); 
@@ -67,6 +65,29 @@ for imod = 1:nmod
 end
 
 % nansum(elbos(:,:,1))  nansum(elbos(:,:,2)) 
+
+%% Parameter correlation matrix
+addpath ../../toolbox/plot_functions/
+
+for imod = 1:nmod
+    par_mod = pars.(kernelarr{imod}).pars;
+    npars = size(par_mod,2);
+    
+    for icond = 1:2
+        x = [par_mod(:,:,1) par_mod(:,:,2)];
+    end
+
+    [r,p] = corr(x,'Type','Pearson');
+    dat.R = r;
+    dat.P = p;
+    % for KF model only
+    if npars == 3
+        dat.labels = {'\alpha_B','\zeta_B','\tau_B','\alpha_F','\zeta_F','\tau_F'};
+    elseif npars == 4
+        dat.labels = {'\alpha_B','\delta_B','\zeta_B','\tau_B','\alpha_F','\delta_F','\zeta_F','\tau_F'};
+    end
+    plotCorrMatrix(dat);
+end
 
 
 

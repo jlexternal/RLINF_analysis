@@ -4,7 +4,7 @@ clear all
 % INPUT ---------------------------------
 samplename   = 'sample2';
 fittype      = 'fit'; % 'fit' or 'recovery'
-outputkernel = 'out_fit_noisyKF_cfrule_s'; % name kernel of output
+outputkernel = 'out_fit_noisyKF_cfrule_subj'; % name kernel of output
 savekernel   = 'fit_noisyKF_cfrule'; % output kernel without 'out' and 's'
 momenttype   = 'xavg'; % xavg or xmap
 npar         = 4; % this might change depending on the type of model used
@@ -51,7 +51,7 @@ out.outputkernel = outputkernel;
 out.momenttype = momenttype;
 
 % Write a description of the data file produced here
-out.description = 'Recovered parameters on sample2 (subj_max 110) with noisyKF model'; 
+out.description = 'Fit parameters on sample2 (subj_max 247) with noisyKF model'; 
 
 savename = sprintf('pars_%s_ALL.mat',savekernel);
 save(sprintf('./sample_out/%s/%s',samplename,savename),'out');

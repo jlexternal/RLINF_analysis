@@ -7,13 +7,20 @@
 clear all
 clc
 
+% -------------- Input --------------
+isretest = true;
 samplename = 'sample2';
 versionadd = '';
+% -----------------------------------
 dirname = './import';
 filename = sprintf('resp_%s%s.csv',samplename,versionadd);
+if isretest
+    filename = sprintf('resp_retest_%s%s.csv',samplename,versionadd);
+    load(sprintf('./processed/%s/idx_TaskQuesAll.mat',samplename),'idx_fullAll');
+    load(sprintf('./processed/%s/idx_retested.mat',samplename),'idx_retested');
+end
 
 dir = ls(fullfile(sprintf('%s/%s/%s', dirname, samplename, filename)));
-
 fulltable = readtable(dir(1:end-1));
 
 % Check subjects for missing data points
@@ -32,16 +39,20 @@ for isubj = 1:nsubj
     
     % if number of trials are mismatched
     if sum(idx) ~= ntrl_max
-        fprintf('Subject %d reported %d/%d trials!\n',isubj,sum(idx),ntrl_max);
         if sum(idx) == 0 % returned subjects
             isubj_task_excl = [isubj_task_excl isubj];
             continue
-        elseif sum(idx) < ntrl_max % find which trials are missing for partial trial sums
+        end
+        fprintf('Subject %d reported %d/%d trials!\n',isubj,sum(idx),ntrl_max);
+        if sum(idx) < ntrl_max % find which trials are missing for partial trial sums
             isubj_task_excl = [isubj_task_excl isubj];
             % fairy has extra trial at the BEGINNING
             t_missing = setdiff(1:288,fulltable.itrl(idx & fulltable.icnd == 1));
             if ~isempty(t_missing)
                 fprintf(' > %d fairy trials missing\n',numel(t_missing));
+                if numel(t_missing) < 8;
+                    fprintf('   (%s)',strjoin(string(t_missing),', '));
+                end
             end
             for it = extra_trial_idx_fairy
                 if sum(idx & fulltable.icnd == 1 & fulltable.itrl == it) ~= 2
@@ -54,6 +65,9 @@ for isubj = 1:nsubj
             t_missing = setdiff(1:288,fulltable.itrl(idx & fulltable.icnd == 0));
             if ~isempty(t_missing)
                 fprintf(' > %d bandit trials missing\n',numel(t_missing));
+                if numel(t_missing) < 8;
+                    fprintf('   (%s)',strjoin(string(t_missing),', '));
+                end
             end
             for it = extra_trial_idx_bandit
                 if sum(idx & fulltable.icnd == 0 & fulltable.itrl == it) ~= 2
@@ -147,7 +161,13 @@ isubj_task_excl = unique(isubj_task_excl);
 fprintf('%d full data points collected.\n\n',nsubj-numel(isubj_task_excl));
 
 % Save to file
-savename = sprintf('subj_struct_%s', samplename);
+savenameadd = '';
+if isretest
+    savenameadd = 'retest';
+    idx_task_rt = ~cellfun(@isempty,subj_struct);
+    save(sprintf('./processed/%s/idx_task_rt.mat',samplename),"idx_task_rt");
+end
+savename = sprintf('subj_struct_%s_%s',savenameadd,samplename);
 savedir = sprintf('./processed/%s', samplename);
 
 if not(isfolder(savedir))

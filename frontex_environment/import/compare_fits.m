@@ -14,6 +14,7 @@ nmod = numel(kernelarr);
 
 load(sprintf('../../constants/constants_rlinf_%s.mat',samplename),'ncnd'); % load constants
 load(sprintf('../../processed/%s/preprocessed_data_%s.mat',samplename,samplename),'idx_blmn');
+load(sprintf('../../processed/%s/idx_TaskQuesAll.mat',samplename));
 
 elbos = nan(nsubj,ncnd,nmod);
 pars = struct;
@@ -42,10 +43,9 @@ end
 %% Fixed effects BMS
 
 model_rank = nan(nsubj,nmod,ncnd); 
-
 for icond = 1:ncnd
     for isubj = 1:nsubj
-        if isnan(elbos(isubj,1,1))
+        if isnan(elbos(isubj,1,1)) | idx_fullAll(isubj) == 0
             continue
         end
         for icond = 1:ncnd
@@ -55,16 +55,19 @@ for icond = 1:ncnd
 end
 
 % model frequency
-n_full = sum(~isnan(elbos(:,1,1)));
+n_full = sum(idx_fullAll);
+fprintf('\nModel frequencies: \n');
 for imod = 1:nmod
-    fprintf('Model: %s\n',kernelarr{imod});
+    fprintf('%s\n',kernelarr{imod});
     for icond = 1:2
         fprintf('%s: %.2f  ',condstr{icond},(sum(model_rank(:,imod,icond) == 1))/n_full);
     end
-    fprintf('\n');
+    fprintf('\n\n');
 end
 
-% nansum(elbos(:,:,1))  nansum(elbos(:,:,2)) 
+for icond = 1:ncnd
+    fprintf('Δ(ELBO)_%s: %.2f\n',condstr{icond},sum(elbos(idx_fullAll,icond,1)) - sum(elbos(idx_fullAll,icond,2)));
+end
 
 %% Parameter correlation matrix
 addpath ../../toolbox/plot_functions/
@@ -72,14 +75,16 @@ addpath ../../toolbox/plot_functions/
 for imod = 1:nmod
     par_mod = pars.(kernelarr{imod}).pars;
     npars = size(par_mod,2);
-    
+
     for icond = 1:2
-        x = [par_mod(:,:,1) par_mod(:,:,2)];
+        x = [par_mod(idx_fullAll,:,1) par_mod(idx_fullAll,:,2)];
     end
 
-    [r,p] = corr(x,'Type','Pearson');
+    corrtype = 'Pearson';
+    [r,p] = corr(x,'Type',corrtype);
     dat.R = r;
     dat.P = p;
+    dat.CorrType = corrtype;
     % for KF model only
     if npars == 3
         dat.labels = {'\alpha_B','\zeta_B','\tau_B','\alpha_F','\zeta_F','\tau_F'};

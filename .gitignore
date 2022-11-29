@@ -9,5 +9,6 @@
 /toolbox/fit_functions/vbmc-master
 /old
 /import
-/code_review
-/frontex_environment/import/sample_in
+/code_revieow
+/frontex_environment/import/sample_in/*
+/processed/sample2/*sim*

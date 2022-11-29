@@ -1,7 +1,7 @@
 function run_fit_noisyKF_cfrule_rlinf(isubj)
 
 % User defined input----------------------
-samplename = 'sample1';
+samplename = 'sample2';
 load(sprintf('./data/%s/preprocessed_data_%s.mat',samplename,samplename));
 savekernel = 'out_fit_noisyKF_cfrule';
 % ----------------------------------------
@@ -47,16 +47,17 @@ if ~isnan(idx_blmn(isubj,1))
         cfg.resp    = dat.resp(dat.cond == icond);
         cfg.rt      = dat.rt(dat.cond == icond,:);
         cfg.resp(cfg.resp == 0) = 2;
+
+        cfg.bmstate = bmst(dat.cond == icond);
     
         cfg.fitalgo = 'bads';   % BADS algorithm
-        cfg.nrun    = 1;       % 10 random starting points
+        cfg.nrun    = 10;       % 10 random starting points
         cfg.nsmp    = 1e3;      % 1e3 samples used by the particle filter
         cfg.nres    = 1e2;      % 1e2 validation samples used by BADS
     
         cfg.cfrule  = false;    % counterfactual rule flag (true or false)
         cfg.nstype  = 'weber';  % noise type (weber or white)
         cfg.chrule  = 'softm';  % choice rule (thomp or softm)
-        %cfg.delta   = 0;       % comment out when not forcing delta to 0
     
         cfg.verbose = 2;        % 0, 1(basic), 2(super verbose) 
         cfg.noprior = true;     % for BADS only
@@ -64,7 +65,6 @@ if ~isnan(idx_blmn(isubj,1))
         % fit BADS
         fprintf('Fitting subject %d over condition %d (BADS)...\n',isubj,icond);
         out_bads{isubj,icond+1} = fit_noisyKF_cfrule_rlinf(cfg);
-    
     
         cfg.fitalgo = 'vbmc';
         cfg.pini.alpha = out_bads{isubj,icond+1}.alpha;
@@ -77,13 +77,12 @@ if ~isnan(idx_blmn(isubj,1))
         fprintf('Fitting subject %d over condition %d (VBMC)...\n',isubj,icond);
         out_vbmc{isubj,icond+1} = fit_noisyKF_cfrule_rlinf(cfg);
     end
-    
+
     dirroot = 'res';
     dirname = sprintf('./%s/%s',dirroot,samplename);
 
     % save file
-    save(sprintf('%s/%s_subj%03d.mat',dirname,savekernel,isubj),'out_bads','out_vbmc');
-
+    save(sprintf('%s/%s_s%03d.mat',dirname,savekernel,isubj),'out_bads','out_vbmc');
 end
 
 end % function end

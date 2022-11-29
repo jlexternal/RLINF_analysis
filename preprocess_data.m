@@ -5,9 +5,14 @@
 % py2.7> 'eng = matlab.engine.start_matlab()'
 clear all
 samplename = 'sample2'; % Pilot - 'pilot'
+isretest = true;
+filenameadd = '';
+if isretest
+    filenameadd = 'retest';
+end
 
 load(sprintf('./constants/constants_rlinf_%s.mat',samplename)); % load nblk, ncond, ntrl, samplename
-load(sprintf('./processed/%s/subj_struct_%s.mat',samplename,samplename)); % load the raw data structure for data sample
+load(sprintf('./processed/%s/subj_struct_%s_%s.mat',samplename,filenameadd,samplename)); % load the raw data structure for data sample
 
 nsubj = numel(subj_struct);
 
@@ -68,4 +73,4 @@ idx_blmn(:,nan_loc(5:end)) = nan; % no actual response given on these trials
 idx_left(:,nan_loc(5:end)) = nan;
 idx_corr(:,nan_loc(5:end)) = nan;
 
-save(sprintf('./processed/%s/preprocessed_data_%s',samplename,samplename),'idx_trial','idx_blk','idx_abstr','idx_epi','idx_cond','idx_fbabs','idx_fb','idx_corr','idx_left','idx_blmn','idx_rt','idx_bmstate');
+save(sprintf('./processed/%s/preprocessed_data_%s_%s',samplename,filenameadd,samplename),'idx_trial','idx_blk','idx_abstr','idx_epi','idx_cond','idx_fbabs','idx_fb','idx_corr','idx_left','idx_blmn','idx_rt','idx_bmstate');

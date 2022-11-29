@@ -20,7 +20,7 @@ if ~isfield(cfg,'nsim')
     error('Missing number of simulations!');
 end
 rand1st = true; % random first response flag
-if isfield(cfg,'resp1')
+if isfield(cfg,'firstresp')
     rand1st = false;
     resp1 = cfg.firstresp; % (vector) first trial responses for each block
 end
@@ -43,7 +43,7 @@ isnoisy = zeta ~= 0;
 % set fixed statistics
 m0 = 0.0000; % prior mean
 v0 = 0.0214; % prior variance
-vs = 0.0643; % sampling variance
+vs = 0.0625; % sampling variance
 
 % define reparameterization functions:
 %   * alpha = fa(vd/vs)
@@ -83,7 +83,7 @@ for it = 1:nt
             if rand1st
                 rt(:,it) = round(rand(nsim,1)) + 1;
             else
-                rt(:,it) = repmat(resp1(ib)*ones(nsim,1));
+                rt(:,it) = resp1(ib)*ones(nsim,1);
             end
         else % fairy task (first response is nothing)
             rt(:,it) = nan(nsim,1);
@@ -117,6 +117,10 @@ for it = 1:nt
     % choice step
     pt(:,it) = 1./(1+exp(-mt(:,it)/tau));
     rt(:,it) = (rand(nsim,1) > pt(:,it))+1;
+
+    if trl(it) == 2 & strcmpi(condstr,'fairy')
+        rt(:,it) = resp1(ib)*ones(nsim,1);
+    end
 end
 
 out = [];

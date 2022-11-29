@@ -8,9 +8,9 @@
 clear all
 
 % specify conditions of simulation 
-samplename = 'pilot07';
-modeltype = 'noisyINF';
-nsim = 1000;
+samplename = 'sample2';
+modeltype = 'noisyKF_cfrule';
+nsim = 10;
 
 filename = sprintf('out_sim_%s_nsim%d_%s',modeltype,nsim,samplename);
 
@@ -29,7 +29,6 @@ sims = sim_out.out;
 nsubj = size(sims,1);
 
 isfirstpass = true;
-
 for isubj = 1:nsubj
     if isempty(sims{isubj,1})
         continue

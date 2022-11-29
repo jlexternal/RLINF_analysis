@@ -53,6 +53,17 @@ else
     rt     = cfg.cfg.rt;
 end
 
+% check for proper dimensionality of reward matrix
+if size(rt,2) ~= 2
+    rt = rt';
+end
+if size(resp,2) ~= 1
+    resp = resp';
+end
+
+assert(size(rt,2)==2);
+assert(size(resp,2)==1);
+
 % get total number of trials
 ntrl = numel(trl);
 
@@ -392,6 +403,9 @@ else
     out.pt = pt_avg; % response probabilities
     out.mt = mt_avg; % filtered posterior means
     out.vt = vt_hat; % posterior variances
+    out.mt_raw = mt_hat; % particle posterior means
+    out.wt_raw = wt_hat; % particle weights
+    
     
     % identify greedy responses
     [~,ru] = max(ut_avg,[],2); % based on exact updates
@@ -504,64 +518,100 @@ out.cfg = cfg;
             % condition posterior means using weighted bootstrapping
             mt(itrl,:,:) = mt(itrl-1,:,randsample(nsmp,nsmp,true,wt(itrl-1,:)));
             vt(itrl,:) = vt(itrl-1,:);
+
             % compute Kalman gains
             kgain = vt(itrl,:)./(vt(itrl,:)+vs);
-            % update posterior means and variances
+            
+            % identify chosen option
             if strcmpi(condstr,'bandit')
-                c = resp(itrl-1); % chosen option
+                c = resp(itrl-1);
             else
-                c = resp(itrl); % chosen option
+                c = resp(itrl);
+                rt_raw = rt(itrl,1)-.5; % fairy task reward transform [-.5 +.5]
             end
             u = 3-c; % unchosen option
 
+            % --- fairy condition initial trial - update BOTH options --- %
+            if strcmpi(condstr,'fairy') & trl(itrl) == 2
+                if c == 1
+                    et(itrl,c,:) = rt(itrl,1)-mt(itrl,c,:);
+                    et(itrl,u,:) = (1-rt(itrl,1))-mt(itrl,u,:);
+                else
+                    et(itrl,c,:) = (1-rt(itrl,1))-mt(itrl,c,:);
+                    et(itrl,u,:) = rt(itrl,1)-mt(itrl,u,:);
+                end
+            end
+            
+            % ------------- update CHOSEN option ------------------------ %
+            % update posterior means and variances
             if strcmpi(condstr,'bandit')
+                % Bandit: outcome(t-1) - *learning(t)* - choice(t) - outcome(t)
                 et(itrl,c,:) = rt(itrl-1,c)-mt(itrl,c,:);
-            else
-                et(itrl,c,:) = rt(itrl,c)-mt(itrl,c,:);
+            elseif strcmpi(condstr,'fairy') & trl(itrl) > 2
+                if c == 1
+                    et(itrl,c,:) = rt(itrl,1)-mt(itrl,c,:);
+                else
+                    et(itrl,c,:) = (1-rt(itrl,1))-mt(itrl,c,:);
+                end
             end
 
+            % calculate noise scale
             if strcmp(nstype,'weber')
                 st(itrl,c,:) = zeta*kgain(c)*abs(et(itrl,c,:));
             else
                 st(itrl,c,:) = zeta;
             end
-            mt(itrl,c,:) = mt(itrl,c,:)+kgain(c)*et(itrl,c,:);
-            vt(itrl,c) = (1-kgain(c))*vt(itrl,c); 
+            mt(itrl,c,:) = mt(itrl,c,:)+(kgain(c)*et(itrl,c,:));
+            vt(itrl,c) = (1-kgain(c))*vt(itrl,c);
+
+            % ------------- update UNCHOSEN option ---------------------- %
+            % update unchosen option
             if cfrule % counterfactual rule
                 if strcmpi(condstr,'bandit')
                     et(itrl,u,:) = (1-rt(itrl-1,c))-mt(itrl,u,:);
-                else
-                    et(itrl,u,:) = (1-rt(itrl,c))-mt(itrl,u,:);
+                elseif strcmpi(condstr,'fairy') & trl(itrl) > 2
+                    if u == 1
+                        et(itrl,u,:) = rt(itrl,1)-mt(itrl,u,:);
+                    else
+                        et(itrl,u,:) = (1-rt(itrl,1))-mt(itrl,u,:);
+                    end
                 end
-
+                % calculate noise scale
                 if strcmp(nstype,'weber')
                     st(itrl,u,:) = zeta*kgain(u)*abs(et(itrl,u,:));
                 else
                     st(itrl,u,:) = zeta;
                 end
-                mt(itrl,u,:) = mt(itrl,u,:)+kgain(u)*et(itrl,u,:);
+                mt(itrl,u,:) = mt(itrl,u,:)+(kgain(u)*et(itrl,u,:));
                 vt(itrl,u) = (1-kgain(u))*vt(itrl,u);
             else % decay
                 st(itrl,u,:) = 0;
-                mt(itrl,u,:) = mt(itrl,u,:)+delta*(0.5-mt(itrl,u,:));
+                mt(itrl,u,:) = mt(itrl,u,:)+(delta*(0.5-mt(itrl,u,:)));
             end
             % account for drift
             vt(itrl,:) = vt(itrl,:)+vd;
             % account for filtering noise
             ut(itrl,:,:) = mt(itrl,:,:); % store filtering means
+            
+            % ------------- corrupt tracked option values --------------- %
             if isnoisy
                 mt(itrl,c,:) = noisrnd_cf(mt(itrl,c,:),st(itrl,c,:));
                 if cfrule % counterfactual rule
                     mt(itrl,u,:) = noisrnd_cf(mt(itrl,u,:),st(itrl,u,:));
                 end
             end
-            % apply policy to get response probabilities
+
+            % --------------------- choice policy ----------------------- %
             x = reshape(mt(itrl,1,:)-mt(itrl,2,:),[1,nsmp]);
             if strcmp(chrule,'thomp')
                 % convert to log-likelihood ratio
                 x = x*2/sqrt(sum(vt(itrl,:)));
             end
             pt(itrl,:) = 1./(1+exp(-x/tau));
+            
+            if any(isnan(pt(itrl,:)))
+                warning('NaN in probability matrix!');
+            end
             % compute filtering weights
             if resp(itrl) == 1
                 wt(itrl,:) = pt(itrl,:);

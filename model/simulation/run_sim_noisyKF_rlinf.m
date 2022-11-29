@@ -5,26 +5,25 @@ clear all
 % both conditions when noiseless
 checkDeterministicCondition = false;
 
-% specify fit dataset to simulate
-samplename = 'pilot07';
-
-% load fit parameters (location of parameter fits/vbmc output)
-fitdir = sprintf('../../processed/%s',samplename); 
-fitname = 'out_fit_noisyKF';
-load(sprintf('%s/%s.mat',fitdir,fitname));
-
-nsim = 1;
-load(sprintf('../../processed/%s/preprocessed_data_%s.mat',samplename,samplename));
-
-% -- Input: Specify output file information --
-%
-savedir  = 'out'; % blank if current dir
-savename = sprintf('out_sim_noisyKF_noNoiseCheck_nsim%d_%s',nsim,samplename);
+% -- Input: Specify source information --
+samplename  = 'sample2';
+modelkernel = 'noisyKF';
+npar        = 3;
+nsim        = 10;
+savedir     = 'out'; % blank if current dir
+savename    = sprintf('out_sim_noisyKF_nsim%d_%s',nsim,samplename);
 %
 %---------------------------------------------
 
+% load fit parameters (location of parameter fits/vbmc output)
+fitdir  = sprintf('../../frontex_environment/import/sample_in/%s',samplename); 
+fitname = sprintf('out_fit_%s_ALL',modelkernel);
+load(sprintf('%s/%s.mat',fitdir,fitname));
+
+% load experiment data
+load(sprintf('../../processed/%s/preprocessed_data_%s.mat',samplename,samplename));
+
 nsubj = size(out_vbmc,1);
-npar = 3;
 ncond = 2;
 
 % extract parameters from VBMC output
@@ -89,14 +88,25 @@ for isubj = 1:nsubj
         trl = dat.trl(dat.cond == icond-1);
         blk = dat.blk(dat.cond == icond-1); 
         % order trials within block
-            nt = sum(blk == 1);
-            nb = max(blk);
-            trl = trl - nt*(blk-1);
+        nt = sum(blk == 1);
+        nb = max(blk);
+        trl = trl - nt*(blk-1);
+
+        idx_resp1 = trl == icond; % 1 for bandit, 2 for fairy
+        resp1 = dat.resp(dat.cond == icond-1);
+        resp1 = resp1(idx_resp1);
+        resp1(resp1 == 0) = 2;
     
         cfg.r1      = fb1(dat.cond == icond-1);
-        cfg.trl     = trl';
+        cfg.trl     = trl'; 
+        cfg.firstresp = resp1;
 
         out_sim{isubj,icond} = sim_noisyKF_rlinf(cfg);
+
+        bmstate = bmst(dat.cond == icond-1);
+        bmstate(bmstate == 0) = 2;
+        out_sim{isubj,icond}.corr = repmat(bmstate,[nsim 1]) == out_sim{isubj,icond}.rt;
+%         fprintf('Accuracy cond %d: %.2f\n',icond,mean(out_sim{isubj,icond}.corr,'all'));
     end
 end
 
@@ -105,7 +115,7 @@ sim_out = struct;
 sim_out.samplename  = samplename;
 sim_out.nsim        = nsim;
 sim_out.pars        = pars;
-sim_out.fxname      = 'sim_noisyKF_rlinf';
+sim_out.fxname      = sprintf('sim_%s_rlinf',modelkernel);
 sim_out.date        = datetime; 
 sim_out.out         = out_sim;
 
@@ -116,13 +126,13 @@ if isfile(fullsavedir)
     fprintf('Continue? (press any key to continue | Ctrl+C/Stop to terminate.\n');
     pause;
 end
-save(fullsavedir,'sim_out');
+save(fullsavedir,'sim_out','-v7.3');
 fprintf('File saved!\n');
 
 %% deterministic model check
 
-rts = nan(23,292,2);
-for isubj = 1:23
+rts = nan(nsubj,292,2);
+for isubj = 1:nsubj
     if isempty(sim_out.out{isubj,1})
         continue
     end
@@ -135,4 +145,3 @@ idx = ~isnan(pts(:,1,1));
 test = pts(idx,:,1)-pts(idx,:,2);
 teststr = {'passed','failed'};
 fprintf('Deterministic test results: %s!\n',teststr{sum(test,'all')==0});
-

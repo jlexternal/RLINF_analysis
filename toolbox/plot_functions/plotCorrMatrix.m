@@ -20,6 +20,9 @@ end
 if ~isfield(dat,'R')
     error('Correlation matrix values are missing! (field ''R'')');
 end
+if ~isfield(dat,'CorrType')
+    error('Provide correlation type! (field ''CorrType'')');
+end
 R = dat.R;
 if any(isnan(R))
     error('Error: NaNs found in input!')
@@ -100,6 +103,7 @@ end
 if exist('ylabelstr','var')
     ylabel(ylabelstr);
 end
+title(sprintf('type: %s',dat.CorrType));
 set(gca,'Layer','top','Box','off','PlotBoxAspectRatio',[pbar,1,1]);
 
 if printflag

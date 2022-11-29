@@ -56,7 +56,7 @@ if ~isnan(idx_blmn(isubj,1))
         end
         cfg.trl     = trl';
         cfg.rt1     = dat.rt1(dat.cond == icond);
-    
+        
         cfg.fitalgo = 'bads';   % BADS algorithm
         cfg.nrun    = 1;        % 10 random starting points
         cfg.nsmp    = 1e3;      % 1e3 samples used by the particle filter

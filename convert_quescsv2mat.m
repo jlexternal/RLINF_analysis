@@ -8,13 +8,20 @@ clc
 addpath ./toolbox/ques_functions/ % for parseqn.m
 
 % --------------------INPUTS ------------------------------
+isretest = true;
 samplename  = 'sample2';
 versionadd  = '';
 nsubj       = 247; % can be arbitrary but set to constant later
-dirname     = './import';
-filename    = sprintf('ques_%s%s.csv',samplename,versionadd);
 is_short_ques = true; % toggle for shortened questionnaire
 % ---------------------------------------------------------
+dirname     = './import';
+filename    = sprintf('ques_%s%s.csv',samplename,versionadd);
+if isretest
+    filename = sprintf('ques_retest_%s%s.csv',samplename,versionadd);
+    load(sprintf('./processed/%s/idx_TaskQuesAll.mat',samplename),'idx_fullAll');
+    load(sprintf('./processed/%s/idx_retested.mat',samplename),'idx_retested');
+    fprintf('Loading questionnaire CSVs for retest (%s)...\n',samplename);
+end
 
 if is_short_ques
     nques = 11;
@@ -596,15 +603,25 @@ for idx = idx_test
         ques_struct{isubj}.iq       = struct;
         ques_struct{isubj}.iq.raw   = [];
     end
-    
+
     if ~isempty(ques_table{idx,10}) % 7 responses
         resp_str = ques_table(idx,3:10);
+        if any(strcmp(strtok(resp_str,':"'),'')) % check for missing responses
+            isubj_incompl = [isubj_incompl isubj];
+            excl = [excl isubj];
+            continue
+        end
         [~,resp_str] = strtok(resp_str,':"');
         for jq = 1:8
             ques_struct{isubj}.iq.raw = [ques_struct{isubj}.iq.raw str2double(resp_str{jq}(3))];
         end 
     else % 4 responses
         resp_str = ques_table(idx,3:6);
+        if any(strcmp(strtok(resp_str,':"'),'')) % check for missing responses
+            isubj_incompl = [isubj_incompl isubj];
+            excl = [excl isubj];
+            continue
+        end
         [~,resp_str] = strtok(resp_str,':"');
         for jq = 1:4
             ques_struct{isubj}.iq.raw = [ques_struct{isubj}.iq.raw str2double(resp_str{jq}(3))];
@@ -614,6 +631,8 @@ for idx = idx_test
         ques_struct{isubj}.iq.description = 'ICAR from the end of shortened questionnaire.';
     end
 end
+
+subjlist_iq = setdiff(subjlist_iq,excl);
 
 % IQ SCORING
 iq_ans = [4 4 4 6 6 3 4 4 5 2 2 4 3 2 6 7];
@@ -903,8 +922,18 @@ fprintf('\nQuestionnaire-excluded subjects:\n');
 fprintf(' %d,',idx_excl_ques);
 fprintf('\n');
 
-save(sprintf('./processed/%s/idx_excl_ques.mat',samplename),'idx_excl_ques');
-save(sprintf('./processed/%s/ques_struct.mat',samplename),'ques_struct'); % save the raw questionnaire scores
+% Save to file
+savenameadd = '';
+if isretest
+    savenameadd = 'retest';
+end
+savename = sprintf('ques_struct_%s_%s',savenameadd,samplename);
+savedir = sprintf('./processed/%s', samplename);
+
+save(sprintf('%s/%s',savedir, savename), 'ques_struct');
+save(sprintf('./processed/%s/idx_excl_rt_ques.mat',samplename),'idx_excl_ques');
+idx_ques_rt = ~cellfun(@isempty,ques_struct);
+save(sprintf('./processed/%s/idx_ques_rt.mat',samplename),'idx_ques_rt');
 
 fprintf('Questionnaire data saved.\n');
 

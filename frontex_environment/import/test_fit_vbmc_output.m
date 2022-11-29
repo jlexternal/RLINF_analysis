@@ -44,9 +44,11 @@ end
 
 %% plot parameter correlations
 x = [pars(idx,:,1) pars(idx,:,2)];
-[r,p] = corr(x,'Type','Spearman');
+corrtype = 'Spearman';
+[r,p] = corr(x,'Type',corrtype);
 dat.R = r;
 dat.P = p;
+dat.CorrType = corrtype;
 if strcmpi(modeltype,'noisyKF')
     dat.labels = {'\alpha_B','\zeta_B','\tau_B','\alpha_F','\zeta_F','\tau_F'};
 elseif strcmpi(modeltype,'noisyINF')

@@ -1,5 +1,5 @@
 function [x] = noisrnd(m,s)
-% sample from noise distribution = truncated normal in [-.5,.5]
+% sample from noise distribution = truncated normal in [0,1]
 if numel(s) == 1
     s = s(ones(size(m)));
 end

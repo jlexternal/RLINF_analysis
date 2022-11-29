@@ -127,6 +127,7 @@ for idim = 1:3
     sc_dim(:,idim) = sum(coef_mini(:,idim).*scores_zlogt,1);
 end
 
+save(sprintf('../processed/%s/dim_scores_mini_%s.mat',samplename),'sc_dim');
 % plot
 trgb  = [182 137 115; 234 191 159; 137 137 137];
 tstr = {'AD','CIT','SW'};

@@ -1,15 +1,29 @@
 % modelfree_analysis
 clear all
 
+addpath ../toolbox/
 addpath ../toolbox/plot_functions/
+% ----------------- Input -----------------
 samplename = 'sample2'; % Pilot - 'pilot'
-load(sprintf('../processed/%s/preprocessed_data_%s.mat',samplename,samplename)); % load the raw data structure for data sample
-load(sprintf('../processed/%s/ques_struct.mat',samplename));
-load(sprintf('../processed/%s/idx_TaskQuesAll.mat',samplename),'idx_fullAll');
+isretest = false;
+% -----------------------------------------
+load(sprintf('../constants/constants_rlinf_%s.mat',samplename));
+rt_str = '';
+if isretest
+    rt_str = 'retest_';
+    fprintf('Analyzing retest data...\n');
+end
+load(sprintf('../processed/%s/preprocessed_data_%s%s.mat',samplename,rt_str,samplename)); % load the raw data structure for data sample
+load(sprintf('../processed/%s/ques_struct_%s%s.mat',samplename,rt_str,samplename));
+if isretest
+    load(sprintf('../processed/%s/idx_TaskQuesAll_rt.mat',samplename),'idx_fullAll_rt');
+    idx_fullAll = idx_fullAll_rt;
+else
+    load(sprintf('../processed/%s/idx_TaskQuesAll.mat',samplename),'idx_fullAll');
+end
 
 nsubj = size(idx_blmn,1);
 fprintf('Number of subjects: %d\n',sum(idx_fullAll));
-condstr = {'bandit','apples'};
 
 ques_order = {'depress', 'anxiety', 'ocir', 'social', 'bis', 'schizo', 'alcohol', 'eat', 'apathy', 'iq'};
 ques_excl = {'schizo','alcohol'};
@@ -127,18 +141,48 @@ for idim = 1:3
     sc_dim(:,idim) = sum(coef_mini(:,idim).*scores_zlogt,1);
 end
 
-save(sprintf('../processed/%s/dim_scores_mini_%s.mat',samplename,samplename),'sc_dim');
+save(sprintf('../processed/%s/dim_scores_mini_%s%s.mat',samplename,rt_str,samplename),'sc_dim');
 % plot
-trgb  = [182 137 115; 234 191 159; 137 137 137];
-tstr = {'AD','CIT','SW'};
-
 addpath ../toolbox/plot_functions/
 props = struct;
-props.MomentType = 'mean';
-props.ErrorType = 'sem';
-plotViolins(sc_dim,trgb,props,{'AD','CIT','SW'});
+props.MomentType = 'median';
+props.ErrorType = 'quartiles';
+plotViolins(sc_dim(idx_fullAll,:),psychrgb*255,props,psychstr);
 
+%% test-retest reliability of mini t-diag scores
 
+% load appropriate variables here (to-be-finalized)
+sc_dim = load(sprintf('../processed/%s/dim_scores_mini_%s.mat',samplename,samplename));
+sc_dim = sc_dim.sc_dim;
+sc_dim_rt = load(sprintf('../processed/%s/dim_scores_mini_retest_%s.mat',samplename,samplename));
+sc_dim_rt = sc_dim_rt.sc_dim;
+for idim = 1:3
+    x = sc_dim(idx_fullAll_rt,idim);
+    y = sc_dim_rt(idx_fullAll_rt,idim);
+    xrange = [min(x) max(x)];
+    [pn,s] = polyfit(x,y,1);
+    [py,d] = polyconf(pn,xrange,s,'alpha',0.05,'predopt','curve');
+    figure(idim);
+    clf
+    hold on
+    s = shadedErrorBar(xrange,py,d,'patchSaturation',.1,'lineprops',{'LineWidth',1,'Color',psychrgb(idim,:)});
+    set(s.edge,'LineStyle','none');
+    scatter(x,y,'MarkerFaceColor',psychrgb(idim,:),'MarkerEdgeColor','none','MarkerFaceAlpha',.5);
+    [r,p] = corr(x,y);
+    plot([-2 3],[-2 3],':');
+    xlim([min(x)-.2 max(x)+.2]);
+    ylim([min(y)-.2 max(y)+.2]);
+    xlabel(sprintf('%s (test)',psychstr{idim}));
+    ylabel(sprintf('%s (retest)',psychstr{idim}))
+    title(sprintf('%s (test-retest)\nr^2=%.4f',psychstr{idim},r^2),'FontSize',12);
+
+    fprintf('Test-retest ICC(%s):\n',psychstr{idim});
+    fprintf('p(correct): Pearson r= %.4f (p=%.4f)\n',r,p);
+    [icc_hat,icc_loc,icc_hic,~,~,~,pval] = ICC([x,y],'C-1');
+    fprintf('p(correct): ICC(3,1) = %.3f [%.3f %.3f] (p=%.4f)\n',icc_hat,icc_loc,icc_hic,pval);
+    [icc_hat,icc_loc,icc_hic,~,~,~,pval] = ICC([x,y],'1-1');
+    fprintf('p(correct): ICC(1,1) = %.3f [%.3f %.3f] (p=%.4f)\n',icc_hat,icc_loc,icc_hic,pval);
+    end
 
 
 
